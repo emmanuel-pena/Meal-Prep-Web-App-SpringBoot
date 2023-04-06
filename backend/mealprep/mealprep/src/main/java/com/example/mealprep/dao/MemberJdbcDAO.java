@@ -76,10 +76,9 @@ public class MemberJdbcDAO implements DAO<Member> {
 
     @Override
     @Transactional
-    public void create(Member member) {
+    public ResponseEntity create(Member member) {
         if (userExists(member)) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT, "User with given username already exists");
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
 
         String encodedPassword = this.passwordEncoder.encode(member.getPassword());
@@ -105,6 +104,8 @@ public class MemberJdbcDAO implements DAO<Member> {
 
         //send verification email now
         sendVerification(createdMember.getEmail(), createdMember.getUsername(), token.getToken());
+
+        return ResponseEntity.status(HttpStatus.OK).build();
     }
 
     @Async
@@ -258,23 +259,33 @@ public class MemberJdbcDAO implements DAO<Member> {
         sendVerification(member.getEmail(), member.getUsername(), token.getToken());
     }
     public boolean userExists(Member member) {
-        String select = "SELECT * FROM member ";
-
-        if (member.getUsername() != null && member.getEmail() != null) {
-            select += "WHERE email = \'" + member.getEmail() + "\' AND username = \'" + member.getUsername() + "\'";
-        } else if (member.getEmail().length() > 0) {
-            select += "WHERE email = \'" + member.getEmail() +"\'";
+        if (userWithEmailExists(member.getEmail()) == false && userWithUsernameExists(member.getUsername()) == false) {
+            return false;
         } else {
-            select += "WHERE username = \'" + member.getUsername() + "\'";
+            return true;
         }
+    }
 
+    public boolean userWithEmailExists(String email)
+    {
+        String select = "SELECT * FROM member WHERE email = \'" + email + "\'";
         try {
             Member res = jdbcTemplate.queryForObject(select, rowMapper);
             return true;
         } catch (EmptyResultDataAccessException ex) {
             return false;
         }
+    }
 
+    public boolean userWithUsernameExists(String username)
+    {
+        String select = "SELECT * FROM member WHERE username = \'" + username + "\'";
+        try {
+            Member res = jdbcTemplate.queryForObject(select, rowMapper);
+            return true;
+        } catch (EmptyResultDataAccessException ex) {
+            return false;
+        }
     }
 
     public ResponseEntity<Object> authenticateUser(String email, String username, String password){

@@ -64,15 +64,13 @@ public class MemberController {
   }
 
   @PostMapping("/user")
-  public ResponseEntity<String> createMember(@RequestBody HashMap<String, String> info) {
+  public ResponseEntity createMember(@RequestBody HashMap<String, String> info) {
     if (!info.containsKey("email") || !info.containsKey("username") || !info.containsKey("password")) {
       return new ResponseEntity<>("Bad request. Fields missing", HttpStatus.BAD_REQUEST);
     }
 
     Member member = new Member(info.get("email"), info.get("username"), info.get("password"), false, "native");
-    memDao.create(member);
-
-    return new ResponseEntity<>("Successfully created member", HttpStatus.CREATED);
+    return memDao.create(member);
   }
 
   @PostMapping("/login")

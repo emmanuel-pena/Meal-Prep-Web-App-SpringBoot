@@ -45,8 +45,8 @@ public class CalendarRecipeJdbcDAO implements DAO{
     }
 
     @Override
-    public void create(Object o) {
-
+    public ResponseEntity create(Object o) {
+       return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @Override

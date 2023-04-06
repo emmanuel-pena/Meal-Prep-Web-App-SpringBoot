@@ -1,5 +1,7 @@
 package com.example.mealprep.dao;
 
+import org.springframework.http.ResponseEntity;
+
 import java.util.*;
 import java.util.Optional;
 
@@ -7,7 +9,7 @@ public interface DAO<T> {
 
     List<T> list();
 
-    void create(T t);
+    ResponseEntity create(T t);
 
     Optional<T> get(int id);
 
