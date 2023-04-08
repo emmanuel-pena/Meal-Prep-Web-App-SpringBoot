@@ -47,9 +47,12 @@ public class MemberTests {
 
     private JavaMailSenderImpl mailSenderImpl = new JavaMailSenderImpl();
 
+    private MemberJdbcDAO memberJdbcDAO;
+
     @BeforeEach
     public void setUp() throws Exception {
         MockitoAnnotations.openMocks(this);
+        memberJdbcDAO = new MemberJdbcDAO(jdbcTemplate, passwordEncoder, authenticationManager, jwtService, mailSenderImpl);
     }
 
     @Test
@@ -65,15 +68,15 @@ public class MemberTests {
        Member member = new Member(info.get("email"), info.get("username"), info.get("password"), false, "native");
        member.setId(UUID.randomUUID().toString());
 
-        MemberJdbcDAO memberJdbcDAO = spy(new MemberJdbcDAO(jdbcTemplate, passwordEncoder, authenticationManager, jwtService, mailSenderImpl));
+        MemberJdbcDAO memberJdbcDAOspy = spy(memberJdbcDAO);
 
         when(jdbcTemplate.queryForObject(anyString(), any(RowMapper.class))).thenReturn(member);
 
-        when(memberJdbcDAO.userWithUsernameExists(member.getUsername())).thenReturn(false);
-        when(memberJdbcDAO.userWithEmailExists(member.getEmail())).thenReturn(false);
+        when(memberJdbcDAOspy.userWithUsernameExists(member.getUsername())).thenReturn(false);
+        when(memberJdbcDAOspy.userWithEmailExists(member.getEmail())).thenReturn(false);
 
 
-        assertEquals(ResponseEntity.status(HttpStatus.OK).build().getStatusCode(), memberJdbcDAO.create(member).getStatusCode());
+        assertEquals(ResponseEntity.status(HttpStatus.OK).build().getStatusCode(), memberJdbcDAOspy.create(member).getStatusCode());
 
     }
 
@@ -90,19 +93,19 @@ public class MemberTests {
         Member member = new Member(info.get("email"), info.get("username"), info.get("password"), false, "native");
         member.setId(UUID.randomUUID().toString());
 
-        MemberJdbcDAO memberJdbcDAO = spy(new MemberJdbcDAO(jdbcTemplate, passwordEncoder, authenticationManager, jwtService, mailSenderImpl));
+        MemberJdbcDAO memberJdbcDAOspy = spy(memberJdbcDAO);
 
         when(jdbcTemplate.queryForObject(anyString(), any(RowMapper.class))).thenReturn(member);
 
-        when(memberJdbcDAO.userWithUsernameExists(member.getUsername())).thenReturn(false);
-        when(memberJdbcDAO.userWithEmailExists(member.getEmail())).thenReturn(true);
+        when(memberJdbcDAOspy.userWithUsernameExists(member.getUsername())).thenReturn(false);
+        when(memberJdbcDAOspy.userWithEmailExists(member.getEmail())).thenReturn(true);
 
 
-        assertEquals(ResponseEntity.status(HttpStatus.CONFLICT).build().getStatusCode(), memberJdbcDAO.create(member).getStatusCode());
+        assertEquals(ResponseEntity.status(HttpStatus.CONFLICT).build().getStatusCode(), memberJdbcDAOspy.create(member).getStatusCode());
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     @DisplayName("Gives error when trying to create account with existing Username.")
     public void test_attemptCreatingExistingUsernameAccount()
     {
@@ -125,3 +128,5 @@ public class MemberTests {
         assertEquals(ResponseEntity.status(HttpStatus.CONFLICT).build().getStatusCode(), memberJdbcDAO.create(member).getStatusCode());
     }
 }
+
+
